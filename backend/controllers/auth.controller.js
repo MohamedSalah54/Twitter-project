@@ -53,46 +53,49 @@ export const signup = async(req,res) =>{
  }catch (error){
     console.log("Error in signup controller",error.message);
     
-    res.status(500).json({error:"internal server Error"})
+    return res.status(500).json({error:"internal server Error"})
  }
 }
 
 
-export const signin = async(req,res) =>{
-  try{
-    const {username,password} = req.body;
-    const user = await User.findOne({username})
-    const ifPasswordCorrect = await bcrypt.compare(password,user?.password || "")
-    
-    if(!user || !ifPasswordCorrect){
-        res.status(400).json({error:"invalid emial or password"})
+export const signin = async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const user = await User.findOne({ username });
+      const ifPasswordCorrect = await bcrypt.compare(password, user?.password || "");
+  
+      if (!user || !ifPasswordCorrect) {
+        return res.status(400).json({ error: "Invalid username or password" });
+      }
+  
+      // Generate token and set cookie
+      generateTokenAndSetcookie(user._id, res);
+  
+      return res.status(200).json({
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        followers: user.followers,
+        following: user.following,
+        profileImg: user.profileImg,
+        coverImg: user.coverImg,
+      });
+    } catch (error) {
+      console.log("Error in signin controller:", error.message);
+      return res.status(500).json({ error: "Internal server Error" });
     }
-    generateTokenAndSetcookie(user._id,res);
-    res.status(200).json({
-        _id:user._id,
-        fullName:user.fullName,
-        username:user.username,
-        email:user.email,
-        followers:user.followers,
-        following:user.following,
-        profileImg:user.profileImg,
-        coverImg:user.coverImg,
-    })
-  }catch (error){
-    console.log("Error in signin controller:",error.message);
-    
-    res.status(500).json({error:"internal server Error"})
-  }
-}
+  };
+  
 
 
 export const logout = async(req,res) =>{
    try{
-    res.cookie("jwt", "",{maxAge:0})
-    res.status(200).json({message:"Logout successfully.."})
+     res.cookie("jwt", "",{maxAge:0})
+     res.status(200).json({message:"Logout successfully.."})
    }catch(error){
     console.log("Error in logout controller :" ,error.message);
-    res.status(500).json({error:"internal error server"})
+    return res.status(500).json({error:"internal error server"})
     
    }
 }
@@ -103,6 +106,6 @@ export const getMe = async (req,res) =>{
          res.status(200).json(user);
     }catch (error){
         console.log("error",error.message);
-        res.status(500).json({error:"Internal server error controller"})
+       return res.status(500).json({error:"Internal server error controller"})
     }
 }
